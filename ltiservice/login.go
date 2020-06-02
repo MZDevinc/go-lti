@@ -85,7 +85,7 @@ func validateLogin(req *http.Request) error {
 func setStateCookie(w http.ResponseWriter, state string) {
 	secs := 3600
 	cookie := http.Cookie{
-		Name:    fmt.Sprintf("mz_lti_go_%s", state),
+		Name:    fmt.Sprintf("mzdevinc_lti_go_%s", state),
 		Value:   state,
 		Expires: time.Now().Add(time.Second * time.Duration(secs)),
 		MaxAge:  secs,
