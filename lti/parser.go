@@ -7,9 +7,9 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
-//FormResourceLinkMessage materializes json claims into a ResourceLinkMessage struct
-func FormResourceLinkMessage(claims jwt.MapClaims) (ResourceLinkMessage, error) {
-	linkMessage := ResourceLinkMessage{}
+//ParseLaunchMessage materializes json claims into a ResourceLinkMessage struct
+func ParseLaunchMessage(claims jwt.MapClaims) (LaunchMessage, error) {
+	linkMessage := LaunchMessage{}
 
 	t := reflect.TypeOf(linkMessage)
 	ps := reflect.ValueOf(&linkMessage)

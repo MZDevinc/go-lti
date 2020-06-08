@@ -17,7 +17,7 @@ const userProperty = "user"
 //GetLaunchHandler Returns a handler for a LaunchMessage
 //Once the incoming JWT is decoded and validated, the provided callback function will
 //be executed
-func (ltis *LTIService) GetLaunchHandler(callback func(lti.ResourceLinkMessage)) http.Handler {
+func (ltis *LTIService) GetLaunchHandler(callback func(lti.LaunchMessage)) http.Handler {
 	handlerFunc := http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
 		ltis.launch(w, req, callback)
 	})
@@ -38,7 +38,7 @@ func (ltis *LTIService) GetLaunchHandler(callback func(lti.ResourceLinkMessage))
 	return jwtMW.Handler(handlerFunc)
 }
 
-func (ltis *LTIService) launch(w http.ResponseWriter, req *http.Request, callback func(lti.ResourceLinkMessage)) {
+func (ltis *LTIService) launch(w http.ResponseWriter, req *http.Request, callback func(lti.LaunchMessage)) {
 	//Extract claims from the JWT
 	userToken := req.Context().Value(userProperty)
 	tok := userToken.(*jwt.Token)
@@ -68,7 +68,7 @@ func (ltis *LTIService) launch(w http.ResponseWriter, req *http.Request, callbac
 		return
 	}
 
-	launchMessage, err := lti.FormResourceLinkMessage(claims)
+	launchMessage, err := lti.ParseLaunchMessage(claims)
 	if err != nil {
 		http.Error(w, err.Error(), 401)
 	}
