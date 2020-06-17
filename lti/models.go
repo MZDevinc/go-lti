@@ -2,16 +2,6 @@ package lti
 
 // This package contains models for objects as defined in the LTI 1.3 specification
 
-// DefinesUserIdentity represents that an object contains fields to identify a user, and provides methods for accessing them
-type DefinesUserIdentity interface {
-	IsAnonymous() bool
-	GetSub() *string
-	GetGivenName() *string
-	GetFamilyName() *string
-	GetName() *string
-	GetEmail() *string
-}
-
 // DefinesContext represents that an object contains a Context object, and provides a method for accessing it
 type DefinesContext interface {
 	GetContext() *Context
@@ -21,8 +11,11 @@ type DefinesContext interface {
 // See http://www.imsglobal.org/spec/lti/v1p3/#launch-from-a-resource-link-0
 // Many claims are optional. Optional claims are represented by pointer fields.
 type LaunchMessage struct {
-	Iss string `json:"iss"` // Issuer
-	Aud string `json:"aud"` // Client ID
+	Iss   string `json:"iss"` // Issuer
+	Aud   string `json:"aud"` // Client ID
+	Iat   int    `json:"iat"` // Token created timestamp
+	Exp   int    `json:"exp"` // Token will expire timestamp
+	Nonce string `json:"nonce"`
 
 	// Message type should be either "LtiResourceLinkRequest" or "LtiDeepLinkingRequest"
 	MessageType   string `json:"https://purl.imsglobal.org/spec/lti/claim/message_type"`
@@ -224,23 +217,26 @@ func (rlm LaunchMessage) IsAnonymous() bool {
 
 //DeepLinkingResponse encompasses the entire response from the tool to the platform after a deep linking session
 type DeepLinkingResponse struct {
-	Iss string `json:"iss"` // Issuer
-	Aud string `json:"aud"` // Client ID
+	Iss   string `json:"iss"` // Issuer
+	Aud   string `json:"aud"` // Client ID
+	Iat   int    `json:"iat"` // Token created timestamp
+	Exp   int    `json:"exp"` // Token will expire timestamp
+	Nonce string `json:"nonce"`
 
 	// Message type should always be "LtiDeepLinkingResponse"
-	MessageType  string `json:"https://purl.imsglobal.org/spec/lti/claim/message_type"`
-	Version      string `json:"https://purl.imsglobal.org/spec/lti/claim/version"`
-	DeploymentID string `json:"https://purl.imsglobal.org/spec/lti/claim/deployment_id"`
-	Data         string `json:"https://purl.imsglobal.org/spec/lti-dl/claim/data"` // Must match "Data" field of request
+	MessageType  string  `json:"https://purl.imsglobal.org/spec/lti/claim/message_type"`
+	Version      string  `json:"https://purl.imsglobal.org/spec/lti/claim/version"`
+	DeploymentID string  `json:"https://purl.imsglobal.org/spec/lti/claim/deployment_id"`
+	Data         *string `json:"https://purl.imsglobal.org/spec/lti-dl/claim/data"` // Must match "Data" field of request
 
 	// ContentItems contains the selected links from the deep linking flow
 	// Nil if no links were selected
 	ContentItems *[]ContentItem `json:"https://purl.imsglobal.org/spec/lti-dl/claim/content_items"`
 
-	Msg      *string `json:"https://purl.imsglobal.org/spec/lti-dl/claim/msg"`
-	Log      *string `json:"https://purl.imsglobal.org/spec/lti-dl/claim/log"`
-	ErrorMsg *string `json:"https://purl.imsglobal.org/spec/lti-dl/claim/errormsg"`
-	ErrorLog *string `json:"https://purl.imsglobal.org/spec/lti-dl/claim/errorlog"`
+	Msg      *string `json:"https://purl.imsglobal.org/spec/lti-dl/claim/msg,omitempty"`
+	Log      *string `json:"https://purl.imsglobal.org/spec/lti-dl/claim/log,omitempty"`
+	ErrorMsg *string `json:"https://purl.imsglobal.org/spec/lti-dl/claim/errormsg,omitempty"`
+	ErrorLog *string `json:"https://purl.imsglobal.org/spec/lti-dl/claim/errorlog,omitempty"`
 }
 
 // AddContentItem add a content item to the deep linking response

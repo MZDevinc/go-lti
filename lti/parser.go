@@ -112,13 +112,24 @@ func parseStruct(v reflect.Value, subclaims map[string]interface{}) error {
 
 		switch sf.Type.Kind() {
 		case reflect.Ptr:
-			if sf.Type.Elem().Kind() != reflect.String {
-				return fmt.Errorf("Field %s was not string pointer", sf.Name)
-			}
-			if str, ok := subclaims[tag]; ok {
-				def := fmt.Sprintf("%v", str)
-				sv.Set(reflect.ValueOf(&def))
-				fmt.Println("set string pointer value", &def, def)
+			if sf.Type.Elem().Kind() == reflect.String {
+				if str, ok := subclaims[tag]; ok {
+					def := fmt.Sprintf("%v", str)
+					sv.Set(reflect.ValueOf(&def))
+					fmt.Println("set string pointer value", &def, def)
+				}
+			} else if sf.Type.Elem().Kind() == reflect.Bool {
+				if val, ok := subclaims[tag]; ok {
+					def, ok := val.(bool)
+					if ok {
+						sv.Set(reflect.ValueOf(&def))
+						fmt.Println("set bool pointer value", &def, def)
+					} else {
+						return fmt.Errorf("Field %s expected bool", tag)
+					}
+				}
+			} else {
+				return fmt.Errorf("Field %s was not string or bool pointer", sf.Name)
 			}
 			//If claim wasn't present, that's fine, because this was an optional field
 		case reflect.String:
@@ -126,6 +137,13 @@ func parseStruct(v reflect.Value, subclaims map[string]interface{}) error {
 				def := fmt.Sprintf("%v", str)
 				sv.Set(reflect.ValueOf(def))
 				fmt.Println("set string value", def)
+			} else {
+				return fmt.Errorf("Required field %s was not present in claims", sf.Name)
+			}
+		case reflect.Slice:
+			if in, ok := subclaims[tag]; ok {
+				slice := castStringSlice(in)
+				sv.Set(reflect.ValueOf(slice))
 			} else {
 				return fmt.Errorf("Required field %s was not present in claims", sf.Name)
 			}

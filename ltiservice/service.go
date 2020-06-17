@@ -4,38 +4,42 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/dgrijalva/jwt-go"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/sessions"
+	"github.com/lestrrat-go/jwx/jwa"
 	"github.com/lestrrat-go/jwx/jwk"
 	"github.com/pkg/errors"
 )
 
-//LTIService An instance of an LTI connection
+// LTIService An instance of an LTI connection
 type LTIService struct {
-	Store  sessions.Store
-	Config Config
-	debug  func(string, ...interface{})
+	Store          sessions.Store
+	Config         Config
+	routes         []routeDef
+	SigningKeyFunc *func() (jwa.SignatureAlgorithm, interface{}, error)
+	OutgoingJWTkid string
+	debug          func(string, ...interface{})
 }
 
-//Config configuration for the Platform/Tool interface
+// Config configuration for the Platform/Tool interface
 type Config struct {
-	AuthLoginURL string //URL on the Platform that handles the Login redirect
-	LaunchURL    string //URL on the Tool that handles the Launch request
-	ClientID     string //The Platform's Client ID
-	KeySetURL    string //URL on the Platform that provides its public keys via JWKS
+	AuthLoginURL string // URL on the Platform that handles the Login redirect
+	LaunchURL    string // URL on the Tool that handles the Launch request
+	ClientID     string // The Platform's Client ID
+	KeySetURL    string // URL on the Platform that provides its public keys via JWKS
 }
 
-//NewLTIService Returns an LTIService initialized with given configuration and stores
+// NewLTIService Returns an LTIService initialized with given configuration and stores
 func NewLTIService(store sessions.Store, config Config) *LTIService {
 	debug := func(format string, a ...interface{}) {
-		//Production mode, no-op
+		// Production mode, no-op
 	}
 
 	return &LTIService{Store: store, Config: config, debug: debug}
 }
 
-//NewLTIServiceWithDebug Returns an LTIService initialized with given configuration and stores,
-//which will output debug messages using log.Printf
+// NewLTIServiceWithDebug Returns an LTIService initialized with given configuration and stores,
+// which will output debug messages using log.Printf
 func NewLTIServiceWithDebug(store sessions.Store, config Config) *LTIService {
 	debug := func(format string, a ...interface{}) {
 		log.Printf(format, a)
@@ -44,14 +48,19 @@ func NewLTIServiceWithDebug(store sessions.Store, config Config) *LTIService {
 	return &LTIService{Store: store, Config: config, debug: debug}
 }
 
-//NewLTIServiceWithCustomDebug Returns an LTIService initialized with given configuration and stores,
-//which will output debug messages using the given debug handler
+// NewLTIServiceWithCustomDebug Returns an LTIService initialized with given configuration and stores,
+// which will output debug messages using the given debug handler
 func NewLTIServiceWithCustomDebug(store sessions.Store, config Config, debug func(string, ...interface{})) *LTIService {
 	return &LTIService{Store: store, Config: config, debug: debug}
 }
 
-//getValidationKey fetches the public key used to validate the jwt token
-//Currently always pulls from external URL with no cache
+// SetSigningKeyFunc Define a function that can be used to get a signing key for JWTs
+func (ltis *LTIService) SetSigningKeyFunc(handler func() (jwa.SignatureAlgorithm, interface{}, error)) {
+	ltis.SigningKeyFunc = &handler
+}
+
+// getValidationKey fetches the public key used to validate a JWT token from the platform
+// Currently always pulls from external URL (as defined in the service's config object) with no cache
 func (ltis *LTIService) getValidationKey(token *jwt.Token) (interface{}, error) {
 
 	//TO-DO
@@ -89,4 +98,13 @@ func (ltis *LTIService) getValidationKey(token *jwt.Token) (interface{}, error) 
 	}
 
 	return key, nil
+}
+
+func (ltis *LTIService) getSigningKey() (jwa.SignatureAlgorithm, interface{}, error) {
+	if ltis.SigningKeyFunc == nil {
+		return "", nil, fmt.Errorf("No key available")
+	}
+
+	handler := *ltis.SigningKeyFunc
+	return handler()
 }

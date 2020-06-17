@@ -63,7 +63,7 @@ func (ltis *LTIService) launch(w http.ResponseWriter, req *http.Request, callbac
 	//disabled for now apparently Canvas doesn't need it
 
 	//Validate message
-	if err := ltis.validateClientID(claims); err != nil {
+	if err := ltis.validateMessage(claims); err != nil {
 		http.Error(w, err.Error(), 401)
 		return
 	}
@@ -183,23 +183,6 @@ func validateMessageTypeDeepLink(claims jwt.MapClaims) error {
 	}
 	if dlsMap["deep_link_return_url"].(string) == "" {
 		return fmt.Errorf("deep link return url is missing")
-	}
-	if dlsMap["accept_presentation_document_targets"].(string) == "" {
-		return fmt.Errorf("deep link presentation type missing")
-	}
-	types, ok := dlsMap["accept_types"].([]string)
-	if !ok {
-		return fmt.Errorf("missing types (accept_types)")
-	}
-	// types must include 'ltiResourceLink'
-	foundType := false
-	for _, t := range types {
-		if t == "ltiResourceLink" {
-			foundType = true
-		}
-	}
-	if !foundType {
-		return fmt.Errorf("missing resource link placement types (accept_types)")
 	}
 
 	return nil
