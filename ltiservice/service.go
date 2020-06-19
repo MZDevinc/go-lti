@@ -2,7 +2,11 @@ package ltiservice
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
+	"net/http"
+	"strings"
+	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/gorilla/sessions"
@@ -27,6 +31,8 @@ type Config struct {
 	LaunchURL    string // URL on the Tool that handles the Launch request
 	ClientID     string // The Platform's Client ID
 	KeySetURL    string // URL on the Platform that provides its public keys via JWKS
+	AuthTokenURL string // URL to obtain an auth token
+	Issuer       string // Issuer URL, for creating initial JWT
 }
 
 // NewLTIService Returns an LTIService initialized with given configuration and stores
@@ -107,4 +113,65 @@ func (ltis *LTIService) getSigningKey() (jwa.SignatureAlgorithm, interface{}, er
 
 	handler := *ltis.SigningKeyFunc
 	return handler()
+}
+
+// ServiceResult is a holder object for the results of a service call
+type ServiceResult struct {
+	Header http.Header
+	Body   string
+}
+
+// DoServiceRequest fetches an auth token for a service call, then makes and returns the results of that call
+func (ltis *LTIService) DoServiceRequest(scopes []string, url, pMethod, body, pContentType, pAccept string) (*ServiceResult, error) {
+	var (
+		method      = "GET"
+		contentType = "application/json"
+		accept      = "application/json"
+		req         *http.Request
+	)
+	if pMethod != "" {
+		method = pMethod
+	}
+	if pContentType != "" {
+		contentType = pContentType
+	}
+	if pAccept != "" {
+		accept = pAccept
+	}
+	accessToken, err := ltis.GetAccessToken(scopes)
+	if err != nil {
+		return nil, err
+	}
+	// log.Printf("access token fetched: %s", accessToken)
+	client := &http.Client{Timeout: time.Second * 30}
+	if method == "POST" {
+		req, err = http.NewRequest(method, url, strings.NewReader(body))
+		if err != nil {
+			return nil, errors.Wrapf(err, "DoServiceReq: Error Creating new request for POST to %q", url)
+		}
+		req.Header.Add("Content-Type", contentType)
+	} else { // GET
+		req, err = http.NewRequest(method, url, nil)
+		if err != nil {
+			return nil, errors.Wrapf(err, "DoServiceReq: Error Creating new request for method: %q to %q", method, url)
+		}
+	}
+
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", accessToken))
+	req.Header.Add("Accept", accept)
+	log.Printf("About to make request for url, request: %+v", req)
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, errors.Wrapf(err, "DoServiceReq: Error Executing new request for method: %q to %q", method, url)
+	}
+
+	log.Printf("Response received for method: %q to %q: %q", method, url, resp.Status)
+
+	defer resp.Body.Close()
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, errors.Wrapf(err, "DoServiceReq: Error reading the response body for method: %q to %q", method, url)
+	}
+
+	return &ServiceResult{Header: resp.Header, Body: string(bodyBytes)}, nil
 }

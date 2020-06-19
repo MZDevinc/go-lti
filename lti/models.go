@@ -59,6 +59,9 @@ type LaunchMessage struct {
 	// Only defined when message_type is "LtiDeepLinkingRequest"
 	DeepLinkingSettings *DeepLinkingSettings `json:"https://purl.imsglobal.org/spec/lti-dl/claim/deep_linking_settings"`
 
+	// Endpoint contains information about Assignment and Grade Services connected to this message/context
+	Endpoint *AGSEndpoint `json:"https://purl.imsglobal.org/spec/lti-ags/claim/endpoint"`
+
 	// Additional custom properties
 	// See http://www.imsglobal.org/spec/lti/v1p3/#custom-variables-0
 	Custom *map[string]string
@@ -126,6 +129,13 @@ type DeepLinkingSettings struct {
 	Title                             *string  `json:"title"`
 	Text                              *string  `json:"text"`
 	Data                              *string  `json:"data"`
+}
+
+// AGSEndpoint information about the callbacks for Assignment and Grade Services
+type AGSEndpoint struct {
+	Scope     []string `json:"scope"`
+	LineItem  *string  `json:"lineitem"`
+	LineItems *string  `json:"lineitems"`
 }
 
 const (
@@ -527,21 +537,41 @@ type IFrame struct {
 	Height int `json:"height,omitempty"`
 }
 
+// TimeRange a start and end time together
+type TimeRange struct {
+	// ISO8601 start time (optional)
+	StartDateTime string `json:"startDateTime,omitempty"`
+	// ISO8601 end time (optional)
+	EndDateTime string `json:"endDateTime,omitempty"`
+}
+
+/* ----------------------------------------------------------------------------
+ * Assignments and Grades
+ * ------------------------------------------------------------------------- */
+
+// Scopes for AGS calls
+const (
+	ScopeLineItem       = "https://purl.imsglobal.org/spec/lti-ags/scope/lineitem"
+	ScopeResultReadonly = "https://purl.imsglobal.org/spec/lti-ags/scope/result.readonly"
+	ScopeScore          = "https://purl.imsglobal.org/spec/lti-ags/scope/score"
+)
+
 // LineItem an object that indicates that an activity is expected to receive scores.
 type LineItem struct {
+	// ID to uniquely identify the line item within a context
+	// Optional when sending/creating a line item, because the ID is created by the platform and sent back
+	ID string `json:"id,omitempty"`
 	// Label for the line item. If not present, the title of the content item must be used (optional)
 	Label string `json:"label,omitempty"`
 	// Positive decimal value indicating the maximum score possible for this activity
 	ScoreMaximum float32 `json:"scoreMaximum"`
 	// Tool provided ID for the resource (optional)
 	ResourceID string `json:"resourceId,omitempty"`
-	// additional information about the line item; may be used by the tool to identify line items attached to the same
+	// ID of a resource link in the same context as the line item, to connect to it (optional)
+	ResourceLinkID string `json:"resourceLinkId,omitempty"`
+	// Additional information about the line item; may be used by the tool to identify line items attached to the same
 	// resource or resource link (example: grade, originality, participation) (optional)
 	Tag string `json:"tag,omitempty"`
-}
-
-// TimeRange a start and end time together
-type TimeRange struct {
 	// ISO8601 start time (optional)
 	StartDateTime string `json:"startDateTime,omitempty"`
 	// ISO8601 end time (optional)
