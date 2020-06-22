@@ -108,3 +108,31 @@ func (ags *AGService) FindOrCreateLineItem(lineItem lti.LineItem) (lti.LineItem,
 	}
 	return result, nil
 }
+
+// PutGrade saves a score to the LTI platform for the given line item
+func (ags *AGService) PutGrade(lineItem lti.LineItem, grade lti.Grade) error {
+	inscope := ags.HasScope(lti.ScopeScore)
+	if !inscope {
+		return fmt.Errorf("missing necessary scope: %q", lti.ScopeScore)
+	}
+
+	if lineItem.ID == "" {
+		return fmt.Errorf("line item is missing id/endpoint")
+	}
+
+	scoreURL := fmt.Sprintf("%s/scores", lineItem.ID)
+	ags.ltis.debug("Final score url: %s", scoreURL)
+
+	jsonBodyBytes, err := json.Marshal(grade)
+	if err != nil {
+		return errors.Wrap(err, "Failed to encode JSON")
+	}
+
+	res, err := ags.ltis.DoServiceRequest(ags.Scopes, scoreURL, "POST", string(jsonBodyBytes), "application/vnd.ims.lis.v1.score+json", "")
+	if err != nil {
+		return errors.Wrap(err, "Failed to put grade")
+	}
+	log.Printf("put grades service request result: %+v", res)
+
+	return nil
+}

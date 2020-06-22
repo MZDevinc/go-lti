@@ -1,5 +1,7 @@
 package lti
 
+import "time"
+
 // This package contains models for objects as defined in the LTI 1.3 specification
 
 // DefinesContext represents that an object contains a Context object, and provides a method for accessing it
@@ -540,9 +542,9 @@ type IFrame struct {
 // TimeRange a start and end time together
 type TimeRange struct {
 	// ISO8601 start time (optional)
-	StartDateTime string `json:"startDateTime,omitempty"`
+	StartDateTime time.Time `json:"startDateTime,omitempty"`
 	// ISO8601 end time (optional)
-	EndDateTime string `json:"endDateTime,omitempty"`
+	EndDateTime time.Time `json:"endDateTime,omitempty"`
 }
 
 /* ----------------------------------------------------------------------------
@@ -573,7 +575,46 @@ type LineItem struct {
 	// resource or resource link (example: grade, originality, participation) (optional)
 	Tag string `json:"tag,omitempty"`
 	// ISO8601 start time (optional)
-	StartDateTime string `json:"startDateTime,omitempty"`
+	StartDateTime time.Time `json:"startDateTime,omitempty"`
 	// ISO8601 end time (optional)
-	EndDateTime string `json:"endDateTime,omitempty"`
+	EndDateTime time.Time `json:"endDateTime,omitempty"`
+}
+
+// Activity progress values for a submitted Grade
+const (
+	ActivityProgressInitialized = "Initialized"
+	ActivityProgressStarted     = "Started"
+	ActivityProgressInProgress  = "InProgress"
+	ActivityProgressSubmitted   = "Submitted"
+	ActivityProgressCompleted   = "Completed"
+)
+
+// Grading progress values for a submitted Grade
+const (
+	GradingProgressFullyGraded   = "FullyGraded"
+	GradingProgressPending       = "Pending"
+	GradingProgressPendingManual = "PendingManual"
+	GradingProgressFailed        = "Failed"
+	GradingProgressNotReady      = "NotReady"
+)
+
+// Grade represents a score to be sent to the platform
+// All fields are required
+type Grade struct {
+	ScoreGiven       float32   `json:"scoreGiven"`
+	ScoreMax         float32   `json:"scoreMaximum"`
+	ActivityProgress string    `json:"activityProgress"`
+	GradingProgress  string    `json:"gradingProgress"`
+	Timestamp        time.Time `json:"timestamp"`
+	UserID           string    `json:"userId"`
+}
+
+// Result represents a score that is received from the platform
+type Result struct {
+	UserID        string  `json:"userId"`
+	ResultScore   float32 `json:"resultScore"`
+	ResultMaximum float32 `json:"resultMaximum"`
+	Comment       string  `json:"comment"`
+	ID            string  `json:"id"`
+	ScoreOf       string  `json:"scoreOf"`
 }

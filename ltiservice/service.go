@@ -159,13 +159,16 @@ func (ltis *LTIService) DoServiceRequest(scopes []string, url, pMethod, body, pC
 
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", accessToken))
 	req.Header.Add("Accept", accept)
-	log.Printf("About to make request for url, request: %+v", req)
+
+	ltis.debug("About to make request for url, request: %+v", req)
+	ltis.debug("Request body: %s", body)
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, errors.Wrapf(err, "DoServiceReq: Error Executing new request for method: %q to %q", method, url)
 	}
 
-	log.Printf("Response received for method: %q to %q: %q", method, url, resp.Status)
+	ltis.debug("Response received for method: %q to %q: %q", method, url, resp.Status)
 
 	defer resp.Body.Close()
 	bodyBytes, err := ioutil.ReadAll(resp.Body)
