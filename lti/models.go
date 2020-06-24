@@ -64,6 +64,9 @@ type LaunchMessage struct {
 	// Endpoint contains information about Assignment and Grade Services connected to this message/context
 	Endpoint *AGSEndpoint `json:"https://purl.imsglobal.org/spec/lti-ags/claim/endpoint"`
 
+	// NamesRoleService contains information about the Names and Roles Provisioning Service connected to this message/context
+	NamesRoleService *NamesRoleService `json:"https://purl.imsglobal.org/spec/lti-nrps/claim/namesroleservice"`
+
 	// Additional custom properties
 	// See http://www.imsglobal.org/spec/lti/v1p3/#custom-variables-0
 	Custom *map[string]string
@@ -133,11 +136,16 @@ type DeepLinkingSettings struct {
 	Data                              *string  `json:"data"`
 }
 
-// AGSEndpoint information about the callbacks for Assignment and Grade Services
+// AGSEndpoint information about the platform endpoint for Assignment and Grade Services
 type AGSEndpoint struct {
 	Scope     []string `json:"scope"`
 	LineItem  *string  `json:"lineitem"`
 	LineItems *string  `json:"lineitems"`
+}
+
+// NamesRoleService information about the platform endpoint for the Names and Roles Provisioning Service
+type NamesRoleService struct {
+	ContextMembershipsURL string `json:"context_memberships_url"`
 }
 
 const (
@@ -617,4 +625,33 @@ type Result struct {
 	Comment       string  `json:"comment"`
 	ID            string  `json:"id"`
 	ScoreOf       string  `json:"scoreOf"`
+}
+
+/* ----------------------------------------------------------------------------
+ * Names and Roles Provisioning
+ * ------------------------------------------------------------------------- */
+
+// Scope for NRPS call
+const (
+	ScopeContextMembershipReadonly = "https://purl.imsglobal.org/spec/lti-nrps/scope/contextmembership.readonly"
+)
+
+// MemberResponse holds a list of members along with a context
+type MemberResponse struct {
+	ID      string   `json:"id"`
+	Context Context  `json:"context"`
+	Members []Member `json:"members"`
+}
+
+// Member contains attributes for a single member
+type Member struct {
+	Name               string   `json:"name"`
+	Picture            string   `json:"picture"`
+	GivenName          string   `json:"given_name"`
+	FamilyName         string   `json:"family_name"`
+	MiddleName         string   `json:"middle_name"`
+	Email              string   `json:"email"`
+	UserID             string   `json:"user_id"`
+	LisPersonSourcedid string   `json:"lis_person_sourcedid"`
+	Roles              []string `json:"roles"`
 }
