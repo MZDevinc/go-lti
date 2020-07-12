@@ -52,7 +52,7 @@ func (ltis *LTIService) GetDeepLinkingResponseJWT(msg lti.LaunchMessage, items [
 		DeploymentID: msg.DeploymentID,
 		Data:         msg.DeepLinkingSettings.Data,
 
-		ContentItems: &items,
+		ContentItems: items,
 	}
 
 	// Create response JWT out of response object

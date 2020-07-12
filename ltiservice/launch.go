@@ -68,6 +68,7 @@ func (ltis *LTIService) launch(w http.ResponseWriter, req *http.Request, callbac
 		return
 	}
 
+	// launchMessage, err := lti.ParseLaunchMessage(claims)
 	launchMessage, err := lti.ParseLaunchMessage(claims)
 	if err != nil {
 		http.Error(w, err.Error(), 401)

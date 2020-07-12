@@ -31,8 +31,12 @@ func (ltis *LTIService) GetAGService(msg lti.LaunchMessage) (*AGService, error) 
 	}
 
 	ags.Scopes = msg.Endpoint.Scope
-	ags.LineItemURL = msg.Endpoint.LineItem
-	ags.LineItemsURL = msg.Endpoint.LineItems
+	if msg.Endpoint.LineItem != "" {
+		ags.LineItemURL = &msg.Endpoint.LineItem
+	}
+	if msg.Endpoint.LineItems != "" {
+		ags.LineItemsURL = &msg.Endpoint.LineItems
+	}
 
 	return &ags, nil
 }

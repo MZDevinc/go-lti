@@ -13,19 +13,19 @@ type DefinesContext interface {
 // See http://www.imsglobal.org/spec/lti/v1p3/#launch-from-a-resource-link-0
 // Many claims are optional. Optional claims are represented by pointer fields.
 type LaunchMessage struct {
-	Iss   string `json:"iss"` // Issuer
-	Aud   string `json:"aud"` // Client ID
-	Iat   int    `json:"iat"` // Token created timestamp
-	Exp   int    `json:"exp"` // Token will expire timestamp
-	Nonce string `json:"nonce"`
+	Iss   string `json:"iss" required:"true"` // Issuer
+	Aud   string `json:"aud" required:"true"` // Client ID
+	Iat   int    `json:"iat" required:"true"` // Token created timestamp
+	Exp   int    `json:"exp" required:"true"` // Token will expire timestamp
+	Nonce string `json:"nonce" required:"true"`
 
 	// Message type should be either "LtiResourceLinkRequest" or "LtiDeepLinkingRequest"
-	MessageType   string `json:"https://purl.imsglobal.org/spec/lti/claim/message_type"`
-	Version       string `json:"https://purl.imsglobal.org/spec/lti/claim/version"`
-	DeploymentID  string `json:"https://purl.imsglobal.org/spec/lti/claim/deployment_id"`
-	TargetLinkURI string `json:"https://purl.imsglobal.org/spec/lti/claim/target_link_uri"`
+	MessageType   string `json:"https://purl.imsglobal.org/spec/lti/claim/message_type" required:"true"`
+	Version       string `json:"https://purl.imsglobal.org/spec/lti/claim/version" required:"true"`
+	DeploymentID  string `json:"https://purl.imsglobal.org/spec/lti/claim/deployment_id" required:"true"`
+	TargetLinkURI string `json:"https://purl.imsglobal.org/spec/lti/claim/target_link_uri" required:"true"`
 
-	ResourceLink ResourceLink `json:"https://purl.imsglobal.org/spec/lti/claim/resource_link"`
+	ResourceLink *ResourceLink `json:"https://purl.imsglobal.org/spec/lti/claim/resource_link"`
 
 	// User identity claims
 	// If Sub is not defined, the request is anonymous
@@ -81,66 +81,66 @@ type LaunchMessage struct {
 
 // ResourceLink composes properties for the resource link from which the launch message occurs
 type ResourceLink struct {
-	ID          string  `json:"id"`
-	Description *string `json:"description"`
-	Title       *string `json:"title"`
+	ID          string `json:"id" required:"true"`
+	Description string `json:"description"`
+	Title       string `json:"title"`
 }
 
 // Context represents the context, or class/course, from which the launch occurred
 type Context struct {
-	ID    string  `json:"id"`
-	Type  *string `json:"type"`
-	Label *string `json:"label"`
-	Title *string `json:"title"`
+	ID    string   `json:"id" required:"true"`
+	Type  []string `json:"type"`
+	Label string   `json:"label"`
+	Title string   `json:"title"`
 }
 
 // ToolPlatform represents information about the platform from which the launch occurred
 type ToolPlatform struct {
-	GUID              string  `json:"guid"`
-	ContactEmail      *string `json:"contact_email"`
-	Description       *string `json:"description"`
-	Name              *string `json:"name"`
-	URL               *string `json:"url"`
-	ProductFamilyCode *string `json:"product_family_code"`
-	Version           *string `json:"version"`
+	GUID              string `json:"guid" required:"true"`
+	ContactEmail      string `json:"contact_email"`
+	Description       string `json:"description"`
+	Name              string `json:"name"`
+	URL               string `json:"url"`
+	ProductFamilyCode string `json:"product_family_code"`
+	Version           string `json:"version"`
 }
 
 // LaunchPresentation contains contextual information about how the launch will be displayed in the platform
 type LaunchPresentation struct {
-	DocumentTarget *string `json:"document_target"`
-	Height         *string `json:"height"`
-	Width          *string `json:"width"`
-	ReturnURL      *string `json:"return_url"`
-	Locale         *string `json:"locale"`
+	DocumentTarget string `json:"document_target"`
+	Height         int    `json:"height,omitempty"`
+	Width          int    `json:"width,omitempty"`
+	ReturnURL      string `json:"return_url"`
+	Locale         string `json:"locale"`
 }
 
 // LIS contains additional information about Learning Information Services software associations
 type LIS struct {
-	CourseOfferingSourcedID *string `json:"course_offering_sourcedid"`
-	CourseSectionSourcedID  *string `json:"course_section_sourcedid"`
-	OutcomeServiceURL       *string `json:"outcome_service_url"`
-	PersonSourcedID         *string `json:"person_sourcedid"`
-	ResultSourcedID         *string `json:"result_sourcedid"`
+	CourseOfferingSourcedID string `json:"course_offering_sourcedid"`
+	CourseSectionSourcedID  string `json:"course_section_sourcedid"`
+	OutcomeServiceURL       string `json:"outcome_service_url"`
+	PersonSourcedID         string `json:"person_sourcedid"`
+	ResultSourcedID         string `json:"result_sourcedid"`
 }
 
 // DeepLinkingSettings additional information for a Deep Linking request
 type DeepLinkingSettings struct {
-	DeepLinkReturnURL                 string   `json:"deep_link_return_url"`
+	DeepLinkReturnURL                 string   `json:"deep_link_return_url" required:"true"`
 	AcceptTypes                       []string `json:"accept_types"`
 	AcceptPresentationDocumentTargets []string `json:"accept_presentation_document_targets"`
-	AcceptMediaTypes                  *string  `json:"accept_media_types"`
-	AcceptMultiple                    *bool    `json:"accept_multiple"`
-	AutoCreate                        *bool    `json:"auto_create"`
-	Title                             *string  `json:"title"`
-	Text                              *string  `json:"text"`
-	Data                              *string  `json:"data"`
+	AcceptMediaTypes                  string   `json:"accept_media_types"`
+	AcceptMultiple                    bool     `json:"accept_multiple"`
+	AutoCreate                        bool     `json:"auto_create"`
+	Title                             string   `json:"title"`
+	Text                              string   `json:"text"`
+	Data                              string   `json:"data"`
 }
 
 // AGSEndpoint information about the platform endpoint for Assignment and Grade Services
 type AGSEndpoint struct {
 	Scope     []string `json:"scope"`
-	LineItem  *string  `json:"lineitem"`
-	LineItems *string  `json:"lineitems"`
+	LineItem  string   `json:"lineitem"`
+	LineItems string   `json:"lineitems"`
 }
 
 // NamesRoleService information about the platform endpoint for the Names and Roles Provisioning Service
@@ -237,36 +237,36 @@ func (rlm LaunchMessage) IsAnonymous() bool {
 
 //DeepLinkingResponse encompasses the entire response from the tool to the platform after a deep linking session
 type DeepLinkingResponse struct {
-	Iss   string `json:"iss"` // Issuer
-	Aud   string `json:"aud"` // Client ID
-	Iat   int    `json:"iat"` // Token created timestamp
-	Exp   int    `json:"exp"` // Token will expire timestamp
-	Nonce string `json:"nonce"`
+	Iss   string `json:"iss" required:"true"` // Issuer
+	Aud   string `json:"aud" required:"true"` // Client ID
+	Iat   int    `json:"iat" required:"true"` // Token created timestamp
+	Exp   int    `json:"exp" required:"true"` // Token will expire timestamp
+	Nonce string `json:"nonce" required:"true"`
 
 	// Message type should always be "LtiDeepLinkingResponse"
-	MessageType  string  `json:"https://purl.imsglobal.org/spec/lti/claim/message_type"`
-	Version      string  `json:"https://purl.imsglobal.org/spec/lti/claim/version"`
-	DeploymentID string  `json:"https://purl.imsglobal.org/spec/lti/claim/deployment_id"`
-	Data         *string `json:"https://purl.imsglobal.org/spec/lti-dl/claim/data"` // Must match "Data" field of request
+	MessageType  string `json:"https://purl.imsglobal.org/spec/lti/claim/message_type" required:"true"`
+	Version      string `json:"https://purl.imsglobal.org/spec/lti/claim/version" required:"true"`
+	DeploymentID string `json:"https://purl.imsglobal.org/spec/lti/claim/deployment_id" required:"true"`
+	Data         string `json:"https://purl.imsglobal.org/spec/lti-dl/claim/data" required:"true"` // Must match "Data" field of request
 
 	// ContentItems contains the selected links from the deep linking flow
 	// Nil if no links were selected
-	ContentItems *[]ContentItem `json:"https://purl.imsglobal.org/spec/lti-dl/claim/content_items"`
+	ContentItems []ContentItem `json:"https://purl.imsglobal.org/spec/lti-dl/claim/content_items"`
 
-	Msg      *string `json:"https://purl.imsglobal.org/spec/lti-dl/claim/msg,omitempty"`
-	Log      *string `json:"https://purl.imsglobal.org/spec/lti-dl/claim/log,omitempty"`
-	ErrorMsg *string `json:"https://purl.imsglobal.org/spec/lti-dl/claim/errormsg,omitempty"`
-	ErrorLog *string `json:"https://purl.imsglobal.org/spec/lti-dl/claim/errorlog,omitempty"`
+	Msg      string `json:"https://purl.imsglobal.org/spec/lti-dl/claim/msg,omitempty"`
+	Log      string `json:"https://purl.imsglobal.org/spec/lti-dl/claim/log,omitempty"`
+	ErrorMsg string `json:"https://purl.imsglobal.org/spec/lti-dl/claim/errormsg,omitempty"`
+	ErrorLog string `json:"https://purl.imsglobal.org/spec/lti-dl/claim/errorlog,omitempty"`
 }
 
 // AddContentItem add a content item to the deep linking response
 // Prevents any items with a duplicate Type+UniqueContent
 func (dlr *DeepLinkingResponse) AddContentItem(add ContentItem) {
 	if dlr.ContentItems == nil {
-		dlr.ContentItems = &[]ContentItem{}
+		dlr.ContentItems = []ContentItem{}
 	}
 
-	contentItems := *dlr.ContentItems
+	contentItems := dlr.ContentItems
 
 	// Check if item already exists, replace if so (just in case, to update ancillary fields)
 	for i, ci := range contentItems {
@@ -278,7 +278,7 @@ func (dlr *DeepLinkingResponse) AddContentItem(add ContentItem) {
 
 	// If item didn't already exist, add it
 	contentItems = append(contentItems, add)
-	dlr.ContentItems = &contentItems
+	dlr.ContentItems = contentItems
 }
 
 // RemoveContentItem remove a content item from the deep linking response
@@ -294,7 +294,7 @@ func (dlr *DeepLinkingResponse) RemoveContentItemByIdentifiers(contentType, uniq
 	}
 
 	newSlice := []ContentItem{}
-	for _, ci := range *dlr.ContentItems {
+	for _, ci := range dlr.ContentItems {
 		if !(ci.GetType() == contentType && ci.GetUniqueContent() == uniqueContent) {
 			newSlice = append(newSlice, ci)
 		}
@@ -303,7 +303,7 @@ func (dlr *DeepLinkingResponse) RemoveContentItemByIdentifiers(contentType, uniq
 	if len(newSlice) == 0 {
 		dlr.ContentItems = nil
 	} else {
-		dlr.ContentItems = &newSlice
+		dlr.ContentItems = newSlice
 	}
 }
 
