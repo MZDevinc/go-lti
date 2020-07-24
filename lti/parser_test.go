@@ -8,6 +8,10 @@ import (
 )
 
 func TestParser(t *testing.T) {
+	r1 := ResourceLink{
+		ID:          "present",
+		Description: "present",
+	}
 	msg1 := LaunchMessage{
 		Iss:           "present",
 		Aud:           "present",
@@ -18,14 +22,15 @@ func TestParser(t *testing.T) {
 		Version:       "1.3",
 		DeploymentID:  "present",
 		TargetLinkURI: "present",
-		ResourceLink: ResourceLink{
-			ID:          "present",
-			Description: "present",
-		},
+		ResourceLink:  &r1,
 	}
 	err1 := validateLaunchMessage(msg1)
 	assert.NoError(t, err1)
 
+	r2 := ResourceLink{
+		ID:          "present",
+		Description: "present",
+	}
 	msg2 := LaunchMessage{
 		Iss: "present",
 		// Aud:        missing,
@@ -36,10 +41,7 @@ func TestParser(t *testing.T) {
 		Version:       "1.3",
 		DeploymentID:  "present",
 		TargetLinkURI: "present",
-		ResourceLink: ResourceLink{
-			ID:          "present",
-			Description: "present",
-		},
+		ResourceLink:  &r2,
 	}
 	err2 := validateLaunchMessage(msg2)
 	fmt.Println("err2", err2)
@@ -58,9 +60,12 @@ func TestParser(t *testing.T) {
 		// ResourceLink: missing
 	}
 	err3 := validateLaunchMessage(msg3)
-	fmt.Println("err3", err3)
-	assert.Error(t, err3)
+	assert.NoError(t, err3)
 
+	r4 := ResourceLink{
+		// ID:       missing,
+		Description: "present",
+	}
 	msg4 := LaunchMessage{
 		Iss:           "present",
 		Aud:           "present",
@@ -71,10 +76,7 @@ func TestParser(t *testing.T) {
 		Version:       "1.3",
 		DeploymentID:  "present",
 		TargetLinkURI: "present",
-		ResourceLink: ResourceLink{
-			// ID:       missing,
-			Description: "present",
-		},
+		ResourceLink:  &r4,
 	}
 	err4 := validateLaunchMessage(msg4)
 	fmt.Println("err4", err4)
