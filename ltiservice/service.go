@@ -80,14 +80,18 @@ func (ltis *LTIService) getValidationKey(token *jwt.Token) (interface{}, error) 
 	//TO-DO
 	//Now that we have the keyset, save it in cache if we implement a cache
 
-	kid := token.Header["kid"].(string)
-	ltis.debug("Looking for token kid: %q", kid)
+	kid, ok := token.Header["kid"]
+	if !ok {
+		return nil, errors.Wrapf(err, "Failed fetching keyset from endpoint: %q", "no kid")
+	}
+	kidStr := kid.(string)
+	ltis.debug("Looking for token kid: %q", kidStr)
 
-	keys := keyset.LookupKeyID(kid)
+	keys := keyset.LookupKeyID(kidStr)
 	if keys == nil || len(keys) < 1 {
-		return nil, fmt.Errorf("Token validation key not found for kid: %q", kid)
+		return nil, fmt.Errorf("Token validation key not found for kid: %q", kidStr)
 	} else if len(keys) > 1 {
-		log.Printf("Multiple validation keys found for kid value: %q (using first one)", kid)
+		log.Printf("Multiple validation keys found for kid value: %q (using first one)", kidStr)
 	}
 
 	// materializedKey, err := keys[0].Materialize()

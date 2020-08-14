@@ -3,6 +3,7 @@ package ltiservice
 import (
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/MZDevinc/go-lti/lti"
 	jwtmiddleware "github.com/auth0/go-jwt-middleware"
@@ -60,10 +61,19 @@ func (ltis *LTIService) launch(w http.ResponseWriter, req *http.Request, callbac
 	}
 
 	//Validate deployment
-	//disabled for now apparently Canvas doesn't need it
+	if err := ltis.validateDeployment(claims); err != nil {
+		http.Error(w, err.Error(), 401)
+		return
+	}
 
 	//Validate message
 	if err := ltis.validateMessage(claims); err != nil {
+		http.Error(w, err.Error(), 401)
+		return
+	}
+
+	//Validate timing
+	if err := ltis.validateTiming(claims); err != nil {
 		http.Error(w, err.Error(), 401)
 		return
 	}
@@ -129,24 +139,27 @@ func (ltis *LTIService) validateClientID(claims jwt.MapClaims) error {
 	return nil
 }
 
-// func validateDeployment(claims jwt.MapClaims) error {
-// 	depID := claims["https://purl.imsglobal.org/spec/lti/claim/deployment_id"].(string)
-// 	// get the issuer
-// 	iss := claims["iss"].(string)
-// 	// check that the clientIds match
-// 	// note: to get this far, we know the issuer is in the claim, is a string and the registraton exists,
-// 	//   since the jwt was already validated and the issuer was used to find the public key
-// 	dep, _ := M.regDS.FindDeployment(iss, depID)
-// 	if dep != nil {
-// 		return nil
-// 	}
-// 	return fmt.Errorf("Unable to find deployment %q", depID)
-// }
+func (ltis *LTIService) validateDeployment(claims jwt.MapClaims) error {
+	depID, ok := claims["https://purl.imsglobal.org/spec/lti/claim/deployment_id"]
+	if !ok {
+		return fmt.Errorf("No deployment ID")
+	}
+	depIDStr := depID.(string)
+	if depIDStr == "" {
+		return fmt.Errorf("No deployment ID")
+	}
+
+	return nil
+}
 
 func (ltis *LTIService) validateMessage(claims jwt.MapClaims) error {
-	msgType := claims["https://purl.imsglobal.org/spec/lti/claim/message_type"].(string)
+	msgType, ok := claims["https://purl.imsglobal.org/spec/lti/claim/message_type"]
+	if !ok {
+		return fmt.Errorf("Empty message type not allowed")
+	}
+	msgTypeStr := msgType.(string)
 
-	switch msgType {
+	switch msgTypeStr {
 	case "":
 		return fmt.Errorf("Empty message type not allowed")
 	case "LtiResourceLinkRequest":
@@ -156,6 +169,30 @@ func (ltis *LTIService) validateMessage(claims jwt.MapClaims) error {
 	default:
 		return fmt.Errorf("unknown message type (%q)", msgType)
 	}
+}
+
+func (ltis *LTIService) validateTiming(claims jwt.MapClaims) error {
+	iatRaw, ok := claims["iat"]
+	if !ok {
+		return fmt.Errorf("Token creation time is missing")
+	}
+	iat := iatRaw.(int)
+
+	expRaw, ok := claims["exp"]
+	if !ok {
+		return fmt.Errorf("Token expiration time is missing")
+	}
+	exp := expRaw.(int)
+
+	currentTime := int(time.Now().Unix())
+	if iat-1 > currentTime {
+		return fmt.Errorf("Token creation time is invalid")
+	}
+	if currentTime > exp {
+		return fmt.Errorf("Token is expired")
+	}
+
+	return nil
 }
 
 func validateMessageTypeLinkRequest(claims jwt.MapClaims) error {
@@ -182,7 +219,7 @@ func validateMessageTypeDeepLink(claims jwt.MapClaims) error {
 	if !ok {
 		return fmt.Errorf("deep link settings claim is missing")
 	}
-	if dlsMap["deep_link_return_url"].(string) == "" {
+	if deepLinkReturnURL, ok := dlsMap["deep_link_return_url"]; !ok || deepLinkReturnURL.(string) == "" {
 		return fmt.Errorf("deep link return url is missing")
 	}
 
@@ -191,13 +228,13 @@ func validateMessageTypeDeepLink(claims jwt.MapClaims) error {
 
 //validateMessageTypeCommon checks for claims that should be part of any message type
 func validateMessageTypeCommon(claims jwt.MapClaims) error {
-	if claims["sub"].(string) == "" {
+	if sub, ok := claims["sub"]; !ok || sub.(string) == "" {
 		return fmt.Errorf("token is missing user (sub) claim")
 	}
-	if claims["https://purl.imsglobal.org/spec/lti/claim/version"].(string) != "1.3.0" {
+	if version, ok := claims["https://purl.imsglobal.org/spec/lti/claim/version"]; !ok || version.(string) == "" {
 		return fmt.Errorf("token has incompatible lti version")
 	}
-	if claims["https://purl.imsglobal.org/spec/lti/claim/roles"] == nil {
+	if roles, ok := claims["https://purl.imsglobal.org/spec/lti/claim/roles"]; !ok || roles == nil {
 		return fmt.Errorf("token is missing roles claim")
 	}
 	return nil
