@@ -23,7 +23,7 @@ type LaunchMessage struct {
 	MessageType   string `json:"https://purl.imsglobal.org/spec/lti/claim/message_type" required:"true"`
 	Version       string `json:"https://purl.imsglobal.org/spec/lti/claim/version" required:"true"`
 	DeploymentID  string `json:"https://purl.imsglobal.org/spec/lti/claim/deployment_id" required:"true"`
-	TargetLinkURI string `json:"https://purl.imsglobal.org/spec/lti/claim/target_link_uri" required:"true"`
+	TargetLinkURI string `json:"https://purl.imsglobal.org/spec/lti/claim/target_link_uri"`
 
 	ResourceLink *ResourceLink `json:"https://purl.imsglobal.org/spec/lti/claim/resource_link"`
 

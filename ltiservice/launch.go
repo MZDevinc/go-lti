@@ -204,8 +204,11 @@ func validateMessageTypeLinkRequest(claims jwt.MapClaims) error {
 	if !ok {
 		return fmt.Errorf("resource link claim is missing")
 	}
-	if rlMap["id"].(string) == "" {
+	if id, ok := rlMap["id"]; !ok || id.(string) == "" {
 		return fmt.Errorf("resource link id is missing")
+	}
+	if targetLinkURI, ok := claims["https://purl.imsglobal.org/spec/lti/claim/target_link_uri"]; !ok || targetLinkURI.(string) == "" {
+		return fmt.Errorf("target link URI is missing")
 	}
 	return nil
 }
