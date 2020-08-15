@@ -176,15 +176,15 @@ func (ltis *LTIService) validateTiming(claims jwt.MapClaims) error {
 	if !ok {
 		return fmt.Errorf("Token creation time is missing")
 	}
-	iat := iatRaw.(int)
+	iat := iatRaw.(float64)
 
 	expRaw, ok := claims["exp"]
 	if !ok {
 		return fmt.Errorf("Token expiration time is missing")
 	}
-	exp := expRaw.(int)
+	exp := expRaw.(float64)
 
-	currentTime := int(time.Now().Unix())
+	currentTime := float64(time.Now().Unix())
 	if iat-1 > currentTime {
 		return fmt.Errorf("Token creation time is invalid")
 	}
