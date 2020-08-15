@@ -234,7 +234,7 @@ func validateMessageTypeCommon(claims jwt.MapClaims) error {
 	if sub, ok := claims["sub"]; !ok || sub.(string) == "" {
 		return fmt.Errorf("token is missing user (sub) claim")
 	}
-	if version, ok := claims["https://purl.imsglobal.org/spec/lti/claim/version"]; !ok || version.(string) == "" {
+	if version, ok := claims["https://purl.imsglobal.org/spec/lti/claim/version"]; !ok || version.(string) != "1.3.0" {
 		return fmt.Errorf("token has incompatible lti version")
 	}
 	if roles, ok := claims["https://purl.imsglobal.org/spec/lti/claim/roles"]; !ok || roles == nil {
