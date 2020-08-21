@@ -84,11 +84,24 @@ func validateLogin(req *http.Request) error {
 
 func setStateCookie(w http.ResponseWriter, state string) {
 	secs := 3600
+
+	// Cookie with SameSite: none, for Chrome compatibility
 	cookie := http.Cookie{
-		Name:    fmt.Sprintf("mzdevinc_lti_go_%s", state),
-		Value:   state,
-		Expires: time.Now().Add(time.Second * time.Duration(secs)),
-		MaxAge:  secs,
+		Name:     fmt.Sprintf("mzdevinc_lti_go_%s", state),
+		Value:    state,
+		Expires:  time.Now().Add(time.Second * time.Duration(secs)),
+		MaxAge:   secs,
+		SameSite: http.SameSiteNoneMode,
 	}
 	http.SetCookie(w, &cookie)
+
+	// Cookie without SameSite: none, for iOS 12 compatibility
+	cookie2 := http.Cookie{
+		Name:     fmt.Sprintf("mzdevinc_lti_go2_%s", state),
+		Value:    state,
+		Expires:  time.Now().Add(time.Second * time.Duration(secs)),
+		MaxAge:   secs,
+		SameSite: http.SameSiteDefaultMode,
+	}
+	http.SetCookie(w, &cookie2)
 }

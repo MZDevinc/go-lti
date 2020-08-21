@@ -96,13 +96,17 @@ func (ltis *LTIService) validateState(req *http.Request) error {
 	stateVal := req.FormValue("state")
 	cookieName := fmt.Sprintf("mzdevinc_lti_go_%s", stateVal)
 	stateCookie, err := req.Cookie(cookieName)
-	if err != nil {
+
+	cookieName2 := fmt.Sprintf("mzdevinc_lti_go2_%s", stateVal)
+	stateCookie2, err2 := req.Cookie(cookieName2)
+
+	if err != nil && err2 != nil {
 		return errors.Wrap(err, "Missing authentication cookie\nPlease ensure that your browser is not blocking cookies\nError")
 	}
-	if stateCookie.Value == "" {
+	if stateCookie.Value == "" && stateCookie2.Value == "" {
 		return fmt.Errorf("Empty state cookie in request")
 	}
-	if stateCookie.Value != stateVal {
+	if stateCookie.Value != stateVal && stateCookie2.Value != stateVal {
 		return fmt.Errorf("State not found")
 	}
 	return nil
