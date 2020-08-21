@@ -92,6 +92,7 @@ func setStateCookie(w http.ResponseWriter, state string) {
 		Expires:  time.Now().Add(time.Second * time.Duration(secs)),
 		MaxAge:   secs,
 		SameSite: http.SameSiteNoneMode,
+		Secure:   true,
 	}
 	http.SetCookie(w, &cookie)
 
