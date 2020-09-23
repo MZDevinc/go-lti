@@ -75,10 +75,13 @@ func (nrps *NRPService) getNextPageURL(res *ServiceResult) string {
 		hKey := strings.ToLower(k)
 		if hKey == "link" {
 			for _, link := range v {
-				if res := nrps.nextCallRegex.FindSubmatch([]byte(link)); res != nil {
-					nextURL := string(res[1])
-					nrps.ltis.debug("Next Url determined: %v", nextURL)
-					return nextURL
+				parts := strings.Split(link, ",")
+				for _, part := range parts {
+					if res := nrps.nextCallRegex.FindSubmatch([]byte(part)); res != nil {
+						nextURL := string(res[1])
+						nrps.ltis.debug("Next Url determined: %v", nextURL)
+						return nextURL
+					}
 				}
 			}
 		}
