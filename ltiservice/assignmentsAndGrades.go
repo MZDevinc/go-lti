@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 
 	"github.com/MZDevinc/go-lti/lti"
 	"github.com/pkg/errors"
@@ -74,24 +75,40 @@ func (ags *AGService) FindOrCreateLineItem(lineItem lti.LineItem) (lti.LineItem,
 	}
 
 	// lineitemsURL := (*s.svcData)["lineitems"].(string)
-	ags.ltis.debug("calling GET on lineitems url: %q", *ags.LineItemsURL)
-	res, err := ags.ltis.DoServiceRequest(ags.Scopes, *ags.LineItemsURL, "", "", "", "application/vnd.ims.lis.v2.lineitemcontainer+json")
-	if err != nil {
-		return result, errors.Wrap(err, "Failure fetching existing lineitems")
-	}
-	log.Printf("lineitems initial lookup result: %+v", res)
 
-	// find lineitem in existing list from provider,
-	// if it exists, return it (tag should equal lineItem.Tag if it's the same)
-	var existingLineitems []lti.LineItem
-	if err := json.Unmarshal([]byte(res.Body), &existingLineitems); err != nil {
-		return result, errors.Wrap(err, "Failed to process lineitems")
-	}
-	for _, li := range existingLineitems {
-		if li.Tag == lineItem.Tag {
-			log.Printf("Found lineitem amongst existing, returning: %+v", li)
-			return li, nil
+	// get all LineItems using pagination because the default call return with 10 rows
+	finished := false
+	pageNum :=1
+	perPage := 100
+	for finished == false{
+		// append pagination data for the url
+		url := fmt.Sprintf("%s?page=%s&per_page=%s",*ags.LineItemsURL, strconv.Itoa(pageNum), strconv.Itoa(perPage))
+
+		ags.ltis.debug("calling GET on lineitems url: %q", *ags.LineItemsURL)
+		res, err := ags.ltis.DoServiceRequest(ags.Scopes, url, "", "", "", "application/vnd.ims.lis.v2.lineitemcontainer+json")
+		if err != nil {
+			return result, errors.Wrap(err, "Failure fetching existing lineitems")
 		}
+		log.Printf("lineitems initial lookup result: %+v", res)
+
+		// find lineitem in existing list from provider,
+		// if it exists, return it (tag should equal lineItem.Tag if it's the same)
+		var existingLineitems []lti.LineItem
+		if err := json.Unmarshal([]byte(res.Body), &existingLineitems); err != nil {
+			return result, errors.Wrap(err, "Failed to process lineitems")
+		}
+		for _, li := range existingLineitems {
+			if li.Tag == lineItem.Tag || li.ResourceLinkID == lineItem.Tag {
+				log.Printf("Found lineitem amongst existing, returning: %+v", li)
+				return li, nil
+			}
+		}
+		//check is there is next page
+		if len(existingLineitems) < perPage {
+			finished = true
+		}
+
+		pageNum++
 	}
 
 	// since we didn't find one, create it and return it
@@ -101,7 +118,7 @@ func (ags *AGService) FindOrCreateLineItem(lineItem lti.LineItem) (lti.LineItem,
 	}
 	ags.ltis.debug("calling POST on lineitems url: %q with body: %q", *ags.LineItemsURL, string(bodyBytes))
 
-	res, err = ags.ltis.DoServiceRequest(ags.Scopes, *ags.LineItemsURL, "POST", string(bodyBytes), "application/vnd.ims.lis.v2.lineitem+json", "application/vnd.ims.lis.v2.lineitem+json")
+	res, err := ags.ltis.DoServiceRequest(ags.Scopes, *ags.LineItemsURL, "POST", string(bodyBytes), "application/vnd.ims.lis.v2.lineitem+json", "application/vnd.ims.lis.v2.lineitem+json")
 	if err != nil {
 		return result, errors.Wrap(err, "Failed to create new line item")
 	}
