@@ -98,10 +98,20 @@ func (ags *AGService) FindOrCreateLineItem(lineItem lti.LineItem) (lti.LineItem,
 			return result, errors.Wrap(err, "Failed to process lineitems")
 		}
 		for _, li := range existingLineitems {
-			if li.Tag == lineItem.Tag || li.ResourceLinkID == lineItem.Tag {
+			if li.Tag == lineItem.Tag {
 				log.Printf("Found lineitem amongst existing, returning: %+v", li)
 				return li, nil
-			}
+			} else if li.ID == lineItem.ID {
+				// in this case th lineItem exist without tag (first student take this assignment from lti)
+				// update the LineItem by adding tag to it 
+				li.Tag = lineItem.Tag
+				res, err := ags.UpdateLineItem(li)
+				if err != nil {
+					log.Printf("Error during Updating LineItem: %+v", err)
+					return li, err
+				}
+				return res, nil
+			} 
 		}
 		//check is there is next page
 		if len(existingLineitems) < perPage {
@@ -156,4 +166,27 @@ func (ags *AGService) PutGrade(lineItem lti.LineItem, grade lti.Grade) error {
 	log.Printf("put grades service request result: %+v", res)
 
 	return nil
+}
+
+// Update LineItem
+func (ags *AGService) UpdateLineItem(lineItem lti.LineItem) (lti.LineItem, error) {
+	result := lti.LineItem{}
+	bodyBytes, err := json.Marshal(lineItem)
+	if err != nil {
+		return result, fmt.Errorf("Failed to serialize lineitem for sending")
+	}
+	url := fmt.Sprintf("%s/%s",*ags.LineItemsURL, lineItem.ID)
+
+	ags.ltis.debug("calling PUT on lineitems url: %q with body: %q", url, string(bodyBytes))
+
+	res, err := ags.ltis.DoServiceRequest(ags.Scopes, url, "PUT", string(bodyBytes), "application/vnd.ims.lis.v2.lineitem+json", "application/vnd.ims.lis.v2.lineitem+json")
+	if err != nil {
+		return result, errors.Wrap(err, "Failed to Update new line item")
+	}
+	ags.ltis.debug("result from lineitem PUT: %+v", res)
+	if err := json.Unmarshal([]byte(res.Body), &result); err != nil {
+		log.Printf("Error during unmarshall: %+v", err)
+		return result, errors.Wrap(err, "Failed to parse new line item")
+	}
+	return result, nil
 }
