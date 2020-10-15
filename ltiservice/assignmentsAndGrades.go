@@ -101,23 +101,12 @@ func (ags *AGService) FindOrCreateLineItem(lineItem lti.LineItem) (lti.LineItem,
 			if li.Tag == lineItem.Tag {
 				log.Printf("Found lineitem amongst existing, returning: %+v", li)
 				return li, nil
-			} else if li.ID == lineItem.ID {
-				// in this case th lineItem exist without tag (first student take this assignment from lti)
-				// update the LineItem by adding tag to it 
-				li.Tag = lineItem.Tag
-				res, err := ags.UpdateLineItem(li)
-				if err != nil {
-					log.Printf("Error during Updating LineItem: %+v", err)
-					return li, err
-				}
-				return res, nil
 			} 
 		}
 		//check is there is next page
 		if len(existingLineitems) < perPage {
 			finished = true
 		}
-
 		pageNum++
 	}
 
@@ -184,6 +173,25 @@ func (ags *AGService) UpdateLineItem(lineItem lti.LineItem) (lti.LineItem, error
 		return result, errors.Wrap(err, "Failed to Update new line item")
 	}
 	ags.ltis.debug("result from lineitem PUT: %+v", res)
+	if err := json.Unmarshal([]byte(res.Body), &result); err != nil {
+		log.Printf("Error during unmarshall: %+v", err)
+		return result, errors.Wrap(err, "Failed to parse new line item")
+	}
+	return result, nil
+}
+
+
+// GET LineItem
+func (ags *AGService) GetLineItem(url string) (lti.LineItem, error) {
+	result := lti.LineItem{}
+
+	ags.ltis.debug("calling GET on lineitem url: %q", url)
+
+	res, err := ags.ltis.DoServiceRequest(ags.Scopes, url , "GET", "", "", "application/vnd.ims.lis.v2.lineitem+json")
+	if err != nil {
+		return result, errors.Wrap(err, "Failed to GET line item")
+	}
+	ags.ltis.debug("result from lineitem GET: %+v", res)
 	if err := json.Unmarshal([]byte(res.Body), &result); err != nil {
 		log.Printf("Error during unmarshall: %+v", err)
 		return result, errors.Wrap(err, "Failed to parse new line item")
