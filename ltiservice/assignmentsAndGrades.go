@@ -164,11 +164,9 @@ func (ags *AGService) UpdateLineItem(lineItem lti.LineItem) (lti.LineItem, error
 	if err != nil {
 		return result, fmt.Errorf("Failed to serialize lineitem for sending")
 	}
-	url := fmt.Sprintf("%s/%s",*ags.LineItemsURL, lineItem.ID)
+	ags.ltis.debug("calling PUT on lineitems url: %q with body: %q", lineItem.ID, string(bodyBytes))
 
-	ags.ltis.debug("calling PUT on lineitems url: %q with body: %q", url, string(bodyBytes))
-
-	res, err := ags.ltis.DoServiceRequest(ags.Scopes, url, "PUT", string(bodyBytes), "application/vnd.ims.lis.v2.lineitem+json", "application/vnd.ims.lis.v2.lineitem+json")
+	res, err := ags.ltis.DoServiceRequest(ags.Scopes, lineItem.ID, "PUT", string(bodyBytes), "application/vnd.ims.lis.v2.lineitem+json", "application/vnd.ims.lis.v2.lineitem+json")
 	if err != nil {
 		return result, errors.Wrap(err, "Failed to Update new line item")
 	}
