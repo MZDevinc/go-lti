@@ -148,7 +148,7 @@ func (ltis *LTIService) DoServiceRequest(scopes []string, url, pMethod, body, pC
 	}
 	// log.Printf("access token fetched: %s", accessToken)
 	client := &http.Client{Timeout: time.Second * 30}
-	if method == "POST" {
+	if method == "POST" || method == "PUT"{
 		req, err = http.NewRequest(method, url, strings.NewReader(body))
 		if err != nil {
 			return nil, errors.Wrapf(err, "DoServiceReq: Error Creating new request for POST to %q", url)
