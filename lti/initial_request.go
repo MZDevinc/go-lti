@@ -21,7 +21,7 @@ func GetRequesterValuesFromJWT(req *http.Request) (string, string, error) {
 
 	parsed, _ := jwt.Parse(idToken, nil)
 	if parsed == nil {
-		return "", "", fmt.Errorf("Could not parse JWT")
+		return "", "", fmt.Errorf("Could not parse JWT - %s", idToken)
 	}
 
 	claims, ok := parsed.Claims.(jwt.MapClaims)
