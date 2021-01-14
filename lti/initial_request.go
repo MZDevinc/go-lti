@@ -12,6 +12,10 @@ func GetRequesterValuesFromForm(req *http.Request) (string, string) {
 	issuer := req.FormValue("iss")
 	clientID := req.FormValue("client_id")
 
+	if clientID == "" {
+		clientID = req.FormValue("aud")
+	}
+
 	return issuer, clientID
 }
 
