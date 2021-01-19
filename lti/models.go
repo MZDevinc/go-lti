@@ -96,13 +96,13 @@ type Context struct {
 
 // ToolPlatform represents information about the platform from which the launch occurred
 type ToolPlatform struct {
-	GUID              string `json:"guid" required:"true"`
-	ContactEmail      string `json:"contact_email"`
-	Description       string `json:"description"`
-	Name              string `json:"name"`
-	URL               string `json:"url"`
-	ProductFamilyCode string `json:"product_family_code"`
-	Version           string `json:"version"`
+	GUID              interface{} `json:"guid" required:"true"`
+	ContactEmail      string      `json:"contact_email"`
+	Description       string      `json:"description"`
+	Name              string      `json:"name"`
+	URL               string      `json:"url"`
+	ProductFamilyCode string      `json:"product_family_code"`
+	Version           string      `json:"version"`
 }
 
 // LaunchPresentation contains contextual information about how the launch will be displayed in the platform

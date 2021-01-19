@@ -106,7 +106,7 @@ func (ltis *LTIService) validateState(req *http.Request) error {
 	if (stateCookie == nil || stateCookie.Value == "") && (stateCookie2 == nil || stateCookie2.Value == "") {
 		return fmt.Errorf("Empty state cookie in request")
 	}
-	if stateCookie.Value != stateVal && stateCookie2.Value != stateVal {
+	if (stateCookie == nil || stateCookie.Value != stateVal) && (stateCookie2 == nil || stateCookie2.Value != stateVal) {
 		return fmt.Errorf("State not found")
 	}
 	return nil
