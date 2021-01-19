@@ -103,7 +103,7 @@ func (ltis *LTIService) validateState(req *http.Request) error {
 	if err != nil && err2 != nil {
 		return errors.Wrap(err, "Missing authentication cookie\nPlease ensure that your browser is not blocking cookies\nError")
 	}
-	if stateCookie.Value == "" && stateCookie2.Value == "" {
+	if (stateCookie == nil || stateCookie.Value == "") && (stateCookie2 == nil || stateCookie2.Value == "") {
 		return fmt.Errorf("Empty state cookie in request")
 	}
 	if stateCookie.Value != stateVal && stateCookie2.Value != stateVal {
