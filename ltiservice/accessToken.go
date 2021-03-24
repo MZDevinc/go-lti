@@ -30,6 +30,7 @@ func (ltis *LTIService) GetAccessToken(scopes []string) (string, error) {
 	if err != nil {
 		return "", errors.Wrapf(err, "GetAccessToken: Error getting Tool Private Key for clientID: %q.", ltis.Config.ClientID)
 	}
+	ltis.debug("Got key %s", privkey)
 
 	timestamp := int(time.Now().Unix())
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
@@ -76,7 +77,7 @@ func (ltis *LTIService) GetAccessToken(scopes []string) (string, error) {
 	ltis.debug("GetAccessToken response body: %s", body)
 
 	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return "", fmt.Errorf("GetAccessToken: Error response from access token fetch (%q)", response.Status)
+		return "", fmt.Errorf("GetAccessToken: Error response from access token fetch (%q): %s", response.Status, body)
 	}
 
 	var data map[string]interface{}
