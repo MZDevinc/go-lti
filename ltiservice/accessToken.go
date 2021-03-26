@@ -41,6 +41,7 @@ func (ltis *LTIService) GetAccessToken(scopes []string) (string, error) {
 		"exp": timestamp + 60,
 		"jti": fmt.Sprintf("lti-service-token-%s", uuid.NewV4().String()),
 	})
+	token.Header["kid"] = ltis.OutgoingJWTkid
 	tokenStr, err := token.SignedString(privkey)
 	if err != nil {
 		return "", errors.Wrapf(err, "GetAccessToken: Error signing token for clientId: %q.", ltis.Config.ClientID)
