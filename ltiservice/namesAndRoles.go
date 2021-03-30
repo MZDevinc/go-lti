@@ -45,7 +45,7 @@ func (nrps *NRPService) GetMembers() (*lti.MemberResponse, error) {
 	svcURL := nrps.MembersURL
 	for svcURL != "" {
 		count++
-		res, err := nrps.ltis.DoServiceRequest(nrps.Scopes, svcURL, "GET", "", "", "")
+		res, err := nrps.ltis.DoServiceRequest(nrps.Scopes, svcURL, "GET", "", "", "application/vnd.ims.lti-nrps.v2.membershipcontainer+json")
 		if err != nil {
 			return nil, errors.Wrapf(err, "Failed to fetch member fetch #%d", count)
 		}
