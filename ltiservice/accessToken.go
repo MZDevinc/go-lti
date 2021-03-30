@@ -59,14 +59,16 @@ func (ltis *LTIService) GetAccessToken(scopes []string) (string, error) {
 	ltis.debug("GetAccessToken fetch parameters: %s", form.Encode())
 
 	req, err := http.NewRequest("POST", ltis.Config.AuthTokenURL, strings.NewReader(form.Encode()))
-
 	if err != nil {
 		return "", errors.Wrapf(err, "GetAccessToken: Error generating the token request url for clientId: %q.", ltis.Config.ClientID)
 	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	response, err := client.Do(req)
+
 	if err != nil {
 		return "", errors.Wrapf(err, "GetAccessToken: Error executing the form POST for clientId: %q.", ltis.Config.ClientID)
 	}
+
 	log.Printf("Access token response status: %s", response.Status)
 
 	defer response.Body.Close()
