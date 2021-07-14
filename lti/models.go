@@ -69,7 +69,7 @@ type LaunchMessage struct {
 
 	// Additional custom properties
 	// See http://www.imsglobal.org/spec/lti/v1p3/#custom-variables-0
-	Custom *map[string]string
+	Custom *map[string]interface{} `json:"https://purl.imsglobal.org/spec/lti/claim/custom"`
 
 	// Additional custom properties in the root of the message
 	// "Vendors MAY extend the information model for any message type and inject additional properties into the
