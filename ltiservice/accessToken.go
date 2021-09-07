@@ -36,7 +36,7 @@ func (ltis *LTIService) GetAccessToken(scopes []string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
 		"iss": ltis.Config.Issuer,
 		"sub": ltis.Config.ClientID,
-		"aud": ltis.Config.AuthTokenURL,
+		"aud": ltis.Config.AuthTokenAud,
 		"iat": timestamp,
 		"exp": timestamp + 60,
 		"jti": fmt.Sprintf("lti-service-token-%s", uuid.NewV4().String()),

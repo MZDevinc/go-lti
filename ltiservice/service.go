@@ -32,6 +32,7 @@ type Config struct {
 	ClientID     string // The Platform's Client ID
 	KeySetURL    string // URL on the Platform that provides its public keys via JWKS
 	AuthTokenURL string // URL to obtain an auth token
+	AuthTokenAud string // Aud field for auth token request
 	Issuer       string // Issuer URL, for creating initial JWT
 }
 
